@@ -8,6 +8,7 @@ from .serializers import RegisterSerializer, LoginSerializer, DataUsageRecordSer
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def api_root(request):
     return Response({
         "message": "Welcome to DATAra API",
