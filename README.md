@@ -57,20 +57,20 @@ DATAra-backend/
 ## API Endpoint Summary
 | Method | Endpoint              | Auth Required | Description                          |
 |--------|----------------------|---------------|--------------------------------------|
-| GET    | /api/                | No            | API root with endpoint listing       |
-| POST   | /api/register/       | No            | Register a new user                  |
-| POST   | /api/login/          | No            | Log in with credentials              |
-| GET    | /api/usage/          | Yes           | List user's data usage records       |
-| POST   | /api/usage/          | Yes           | Create a new usage record            |
-| GET    | /api/usage/summary/  | Yes           | Dashboard summary (totals, averages) |
-| GET    | /api/profile/        | Yes           | Get user profile                     |
-| PUT    | /api/profile/        | Yes           | Update user profile                  |
+| GET    | `/api/`                | No            | API root with endpoint listing       |
+| POST   | `/api/register/`       | No            | Register a new user                  |
+| POST   | `/api/login/`          | No            | Log in with credentials              |
+| GET    | `/api/usage/`          | Yes           | List user's data usage records       |
+| POST   | `/api/usage/`          | Yes           | Create a new usage record            |
+| GET    | `/api/usage/summary/`  | Yes           | Dashboard summary (totals, averages) |
+| GET    | `/api/profile/`        | Yes           | Get user profile                     |
+| PUT    | `/api/profile/`        | Yes           | Update user profile                  |
 
 ## Mobile ↔ Backend Mapping
 | Mobile Screen          | API Endpoint(s) Used              |
 |-----------------------|----------------------------------|
-| Login (index.tsx)     | POST /api/login/                 |
-| Register (register.tsx)| POST /api/register/             |
-| Dashboard (dashboard.tsx) | GET /api/usage/summary/     |
-| History (history.tsx) | GET /api/usage/                 |
-| Profile (profile.tsx) | GET /api/profile/, PUT /api/profile/ |
+| Login (`index.tsx`)     | POST `/api/login/`                 |
+| Register (`register.tsx`)| POST `/api/register/`            |
+| Dashboard (`dashboard.tsx`) | GET `/api/usage/summary/`     |
+| History (`history.tsx`) | GET `/api/usage/`                 |
+| Profile (`profile.tsx`) | GET `/api/profile/`, PUT `/api/profile/` |
