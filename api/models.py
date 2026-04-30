@@ -14,3 +14,12 @@ class DataUsageRecord(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.date} {self.time_slot}: {self.data_used_mb}MB"
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    phone_number = models.CharField(max_length=15)
+    address = models.CharField(max_length=255, blank=True, default='')
+    provider = models.CharField(max_length=50, blank=True, default='DESU')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.phone_number}"
