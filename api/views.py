@@ -5,6 +5,7 @@ from rest_framework import status
 from django.contrib.auth import authenticate
 from .models import UserProfile, DataUsageRecord
 from .serializers import RegisterSerializer, LoginSerializer, DataUsageRecordSerializer, UserProfileSerializer
+from rest_framework.authtoken.models import Token
 
 
 @api_view(['GET'])
@@ -26,9 +27,10 @@ def api_root(request):
 def register_view(request):
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        user = serializer.save()
+        token, created = Token.objects.get_or_create(user=user)
         return Response(
-            {"message": "User registered successfully"},
+            {"message": "User registered successfully", "token": token.key},
             status=status.HTTP_201_CREATED
         )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -44,10 +46,12 @@ def login_view(request):
             password=serializer.validated_data['password']
         )
         if user:
+            token, created = Token.objects.get_or_create(user=user)
             return Response({
                 "message": "Login successful",
                 "user_id": user.id,
                 "username": user.username,
+                "token": token.key,
             })
         return Response(
             {"error": "Invalid credentials"},
