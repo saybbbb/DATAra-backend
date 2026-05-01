@@ -149,7 +149,16 @@ def profile_view(request):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     elif request.method == 'DELETE':
+        import uuid
         user = request.user
+        
+        # Free up the username so the user can register again with the same number
+        user.username = f"del_{user.id}_{uuid.uuid4().hex[:8]}"
         user.is_active = False
         user.save()
+        
+        # Also free up the phone number in profile
+        profile.phone_number = f"del_{profile.phone_number}"
+        profile.save()
+        
         return Response({"message": "Account deleted successfully"}, status=status.HTTP_200_OK)
