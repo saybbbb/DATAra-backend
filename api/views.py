@@ -79,6 +79,20 @@ def usage_list(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def usage_detail(request, pk):
+    """
+    DELETE — Remove a specific usage record
+    """
+    try:
+        record = DataUsageRecord.objects.get(pk=pk, user=request.user)
+        record.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    except DataUsageRecord.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def usage_summary(request):
