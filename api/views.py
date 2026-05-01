@@ -124,12 +124,13 @@ def usage_summary(request):
     })
 
 
-@api_view(['GET', 'PUT'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def profile_view(request):
     """
     GET — Retrieve the user's profile
     PUT — Update the user's profile
+    DELETE — Soft delete the user account
     """
     try:
         profile = UserProfile.objects.get(user=request.user)
@@ -147,3 +148,8 @@ def profile_view(request):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'DELETE':
+        user = request.user
+        user.is_active = False
+        user.save()
+        return Response({"message": "Account deleted successfully"}, status=status.HTTP_200_OK)
