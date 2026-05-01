@@ -41,10 +41,19 @@ def register_view(request):
 def login_view(request):
     serializer = LoginSerializer(data=request.data)
     if serializer.is_valid():
-        user = authenticate(
-            username=serializer.validated_data['username'],
-            password=serializer.validated_data['password']
-        )
+        username = serializer.validated_data['username']
+        password = serializer.validated_data['password']
+        
+        from django.contrib.auth.models import User
+        try:
+            user_obj = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND)
+            
+        if not user_obj.is_active:
+            return Response({"error": "Account is inactive or has been deleted."}, status=status.HTTP_403_FORBIDDEN)
+            
+        user = authenticate(username=username, password=password)
         if user:
             token, created = Token.objects.get_or_create(user=user)
             return Response({
@@ -54,7 +63,7 @@ def login_view(request):
                 "token": token.key,
             })
         return Response(
-            {"error": "Invalid credentials"},
+            {"error": "Invalid password."},
             status=status.HTTP_401_UNAUTHORIZED
         )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -124,12 +133,13 @@ def usage_summary(request):
     })
 
 
-@api_view(['GET', 'PUT'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def profile_view(request):
     """
     GET — Retrieve the user's profile
     PUT — Update the user's profile
+    DELETE — Soft delete the user account
     """
     try:
         profile = UserProfile.objects.get(user=request.user)
@@ -147,3 +157,17 @@ def profile_view(request):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'DELETE':
+        import uuid
+        user = request.user
+        
+        # Free up the username so the user can register again with the same number
+        user.username = f"del_{user.id}_{uuid.uuid4().hex[:8]}"
+        user.is_active = False
+        user.save()
+        
+        # Also free up the phone number in profile
+        profile.phone_number = f"del_{profile.phone_number}"
+        profile.save()
+        
+        return Response({"message": "Account deleted successfully"}, status=status.HTTP_200_OK)
