@@ -18,6 +18,11 @@ class DataUsageRecord(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     phone_number = models.CharField(max_length=15)
+    full_name = models.CharField(max_length=255, blank=True, default='')
+    region_code = models.CharField(max_length=50, blank=True, default='')
+    city_code = models.CharField(max_length=50, blank=True, default='')
+    barangay_code = models.CharField(max_length=50, blank=True, default='')
+    street_address = models.CharField(max_length=255, blank=True, default='')
     address = models.CharField(max_length=255, blank=True, default='')
     provider = models.CharField(max_length=50, blank=True, default='DESU')
 
