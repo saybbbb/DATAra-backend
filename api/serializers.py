@@ -34,19 +34,14 @@ class LoginSerializer(serializers.Serializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username')
+    username = serializers.CharField(source='user.username', read_only=True)
     email = serializers.CharField(source='user.email', read_only=True)
 
     class Meta:
         model = UserProfile
-        fields = ['username', 'email', 'phone_number', 'address', 'provider']
+        fields = ['username', 'email', 'phone_number', 'full_name', 'address', 'region_code', 'city_code', 'barangay_code', 'street_address', 'provider']
 
-    def update(self, instance, validated_data):
-        user_data = validated_data.pop('user', None)
-        if user_data and 'username' in user_data:
-            instance.user.username = user_data['username']
-            instance.user.save()
-        return super().update(instance, validated_data)
+
 
 
 class DataUsageRecordSerializer(serializers.ModelSerializer):
