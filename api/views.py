@@ -5,6 +5,7 @@ from rest_framework import status
 from django.contrib.auth import authenticate
 from .models import UserProfile, DataUsageRecord
 from .serializers import RegisterSerializer, LoginSerializer, DataUsageRecordSerializer, UserProfileSerializer
+from rest_framework.authtoken.models import Token
 
 
 @api_view(['GET'])
@@ -44,10 +45,12 @@ def login_view(request):
             password=serializer.validated_data['password']
         )
         if user:
+            token, _ = Token.objects.get_or_create(user=user)
             return Response({
                 "message": "Login successful",
                 "user_id": user.id,
                 "username": user.username,
+                "token": token.key,
             })
         return Response(
             {"error": "Invalid credentials"},
@@ -98,6 +101,7 @@ def usage_summary(request):
         .first()
     )
     return Response({
+        "full_name": request.user.profile.full_name if hasattr(request.user, 'profile') else request.user.username,
         "total_used_mb": round(total_used, 2),
         "total_limit_mb": 14336,         # 14 GB in MB — adjust as needed
         "daily_average_mb": round(daily_avg, 2),

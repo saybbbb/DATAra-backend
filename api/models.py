@@ -17,6 +17,7 @@ class DataUsageRecord(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    full_name = models.CharField(max_length=100, blank=True, default='')
     phone_number = models.CharField(max_length=15)
     address = models.CharField(max_length=255, blank=True, default='')
     provider = models.CharField(max_length=50, blank=True, default='DESU')

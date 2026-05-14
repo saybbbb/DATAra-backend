@@ -39,7 +39,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['username', 'email', 'phone_number', 'address', 'provider']
+        fields = ['username', 'email', 'full_name', 'phone_number', 'address', 'provider']
 
 
 class DataUsageRecordSerializer(serializers.ModelSerializer):
