@@ -7,7 +7,6 @@ from .models import UserProfile, DataUsageRecord
 from .serializers import RegisterSerializer, LoginSerializer, DataUsageRecordSerializer, UserProfileSerializer
 from rest_framework.authtoken.models import Token
 
-
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def api_root(request):
@@ -20,7 +19,6 @@ def api_root(request):
             "profile": "/api/profile/",
         }
     })
-
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -48,6 +46,9 @@ def login_view(request):
         try:
             user_obj = User.objects.get(username=username)
         except User.DoesNotExist:
+            from .models import UserProfile
+            if UserProfile.objects.filter(phone_number__endswith=f"_{username}").exists():
+                return Response({"error": "This account was deleted."}, status=status.HTTP_404_NOT_FOUND)
             return Response({"error": "Account does not exist."}, status=status.HTTP_404_NOT_FOUND)
             
         if not user_obj.is_active:
