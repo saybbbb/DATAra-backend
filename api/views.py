@@ -126,6 +126,7 @@ def usage_summary(request):
         .first()
     )
     return Response({
+        "full_name": request.user.profile.full_name if hasattr(request.user, 'profile') else request.user.username,
         "total_used_mb": round(total_used, 2),
         "total_limit_mb": 14336,         # 14 GB in MB — adjust as needed
         "daily_average_mb": round(daily_avg, 2),
