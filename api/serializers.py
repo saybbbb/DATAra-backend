@@ -35,11 +35,21 @@ class LoginSerializer(serializers.Serializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
-    email = serializers.CharField(source='user.email', read_only=True)
+    email = serializers.EmailField(source='user.email', required=False)
 
     class Meta:
         model = UserProfile
         fields = ['username', 'email', 'phone_number', 'full_name', 'address', 'region_code', 'city_code', 'barangay_code', 'street_address', 'provider']
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop('user', None)
+        if user_data:
+            email = user_data.get('email')
+            if email is not None:
+                user = instance.user
+                user.email = email
+                user.save()
+        return super().update(instance, validated_data)
 
 
 
