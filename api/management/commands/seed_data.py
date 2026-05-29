@@ -180,11 +180,11 @@ class Command(BaseCommand):
         # 2. Seed 5 new mock tester accounts with unique user IDs (101 to 105)
         # Login phone number is 11 digits, password is 8 chars alphanumeric
         tester_accounts = [
-            {"id": 101, "phone": "09811111111", "name": "Tester One", "pass": "pass1234"},
-            {"id": 102, "phone": "09822222222", "name": "Tester Two", "pass": "test2026"},
-            {"id": 103, "phone": "09833333333", "name": "Tester Three", "pass": "user1010"},
-            {"id": 104, "phone": "09844444444", "name": "Tester Four", "pass": "seed5555"},
-            {"id": 105, "phone": "09855555555", "name": "Tester Five", "pass": "demo9999"},
+            {"id": 101, "phone": "09811111111", "name": "Tester One", "pass": "pass1234", "tier": "normal", "target_mb_per_slot": (40, 45)},
+            {"id": 102, "phone": "09822222222", "name": "Tester Two", "pass": "test2026", "tier": "warning", "target_mb_per_slot": (75, 85)},
+            {"id": 103, "phone": "09833333333", "name": "Tester Three", "pass": "user1010", "tier": "extreme", "target_mb_per_slot": (90, 105)},
+            {"id": 104, "phone": "09844444444", "name": "Tester Four", "pass": "seed5555", "tier": "normal", "target_mb_per_slot": (35, 42)},
+            {"id": 105, "phone": "09855555555", "name": "Tester Five", "pass": "demo9999", "tier": "warning", "target_mb_per_slot": (65, 75)},
         ]
 
         for tester in tester_accounts:
@@ -205,6 +205,24 @@ class Command(BaseCommand):
             profile.full_name = tester["name"]
             profile.phone_number = tester["phone"]
             profile.save()
+
+            # Seed database records for the tester
+            self.stdout.write(f'  Seeding database history records for {tester["name"]}')
+            for i in range(28):
+                current_date = date.today() - timedelta(days=i)
+                for j in range(5):
+                    hour = random.randint(0, 23)
+                    time_slot = f"{hour:02d}:00-{hour+1:02d}:00"
+                    min_mb, max_mb = tester["target_mb_per_slot"]
+                    app_choice = "Roblox" if tester["tier"] == "extreme" and random.random() < 0.7 else random.choice(apps)
+                    
+                    DataUsageRecord.objects.create(
+                        user=user,
+                        date=current_date,
+                        time_slot=time_slot,
+                        data_used_mb=round(random.uniform(min_mb, max_mb), 2),
+                        app_name=app_choice
+                    )
 
             # 3. Write mock local CSV datasets
             self.generate_local_files(tester["id"])
