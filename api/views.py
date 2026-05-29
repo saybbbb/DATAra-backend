@@ -1,3 +1,7 @@
+import os
+import json
+from pathlib import Path
+from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -173,3 +177,115 @@ def profile_view(request):
         profile.save()
         
         return Response({"message": "Account deleted successfully"}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def ml_metrics_view(request):
+    """
+    GET — Dynamically calculate and fetch ML model performance metrics
+    """
+    base_dir = Path(settings.BASE_DIR)
+    model_path = base_dir / 'api' / 'ml_models' / 'data_depletion_model.joblib'
+    
+    if not model_path.exists():
+        return Response(
+            {"error": "ML model not found. Please ensure the model is trained."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+        
+    try:
+        import joblib
+        import pandas as pd
+        import numpy as np
+        import glob
+        from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+        
+        # Load the model
+        model_data = joblib.load(model_path)
+        model = model_data.get('model')
+        features = model_data.get('features', [])
+        aggregated_hourly_mean = model_data.get('aggregated_hourly_mean', 15.0)
+        
+        if model is None:
+            return Response(
+                {"error": "Trained model object is null inside joblib container."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+        # Search for data harvest CSV files to compute evaluation dynamically
+        csv_dir = base_dir.parent / 'CSV'
+        csv_files = glob.glob(str(csv_dir / "data_harvest*.csv"))
+        
+        if not csv_files:
+            return Response(
+                {"error": "No dataset CSV files found to compute evaluation metrics."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        dfs = []
+        for f in csv_files:
+            try:
+                dfs.append(pd.read_csv(f))
+            except Exception:
+                continue
+                
+        if not dfs:
+            return Response(
+                {"error": "Failed to read any dataset CSV files."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+        df = pd.concat(dfs, ignore_index=True)
+        
+        # Preprocessing matching the training logic
+        df['datetime'] = pd.to_datetime(df['datetime'])
+        df['hour'] = df['datetime'].dt.hour
+        
+        if 'network_type' in df.columns:
+            cellular_df = df[df['network_type'].isin(['CELLULAR', 'MOBILE'])]
+            if len(cellular_df) > 100:
+                df = cellular_df
+                
+        df['date'] = df['datetime'].dt.date
+        
+        agg_dict = {'mb_used': 'sum'}
+        if 'screen_on' in df.columns:
+            agg_dict['screen_on'] = 'mean'
+        if 'battery_level' in df.columns:
+            agg_dict['battery_level'] = 'mean'
+            
+        hourly_df = df.groupby(['date', 'hour', 'day_of_week', 'is_weekend']).agg(agg_dict).reset_index()
+        
+        # Prepare feature vectors
+        if 'screen_on' in hourly_df.columns:
+            hourly_df['screen_on'] = hourly_df['screen_on'].fillna(0.0)
+        if 'battery_level' in hourly_df.columns:
+            hourly_df['battery_level'] = hourly_df['battery_level'].fillna(50.0)
+            
+        X = hourly_df[features]
+        y = hourly_df['mb_used']
+        
+        # Predict on dataset
+        y_pred = model.predict(X)
+        
+        # Calculate dynamic metrics
+        mae = mean_absolute_error(y, y_pred)
+        mse = mean_squared_error(y, y_pred)
+        rmse = np.sqrt(mse)
+        r2 = r2_score(y, y_pred)
+        
+        metrics_data = {
+            "mae_mb": float(mae),
+            "rmse_mb": float(rmse),
+            "r2_score": float(r2),
+            "features_used": features,
+            "dataset_size_records": int(len(hourly_df))
+        }
+        return Response(metrics_data)
+        
+    except Exception as e:
+        return Response(
+            {"error": f"Failed to compute dynamic metrics: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
