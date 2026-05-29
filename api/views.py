@@ -275,7 +275,20 @@ def ml_metrics_view(request):
         rmse = np.sqrt(mse)
         r2 = r2_score(y, y_pred)
         
+        # Determine model type dynamically based on the model object class name
+        model_name = model.__class__.__name__
+        if model_name == 'RandomForestRegressor':
+            model_type = "Random Forest"
+        elif model_name == 'XGBRegressor':
+            model_type = "XGBoost"
+        elif model_name == 'LinearRegression':
+            model_type = "Linear Regression"
+        else:
+            import re
+            model_type = re.sub(r'(?<!^)(?=[A-Z])', ' ', model_name.replace('Regressor', '').replace('Regression', ''))
+
         metrics_data = {
+            "model_type": model_type,
             "mae_mb": float(mae),
             "rmse_mb": float(rmse),
             "r2_score": float(r2),
