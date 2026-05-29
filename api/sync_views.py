@@ -9,10 +9,12 @@ from io import BytesIO
 from django.http import HttpResponse
 from django.conf import settings
 from pathlib import Path
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.parsers import MultiPartParser, FormParser
 
 # CSV columns mapping
 NETWORK_STATS_COLUMNS = [
@@ -345,3 +347,55 @@ def global_averages(request):
     return Response({
         "baseline_average_user_consumption": averages[:10]  # top 10 apps
     })
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def upload_csv_file(request):
+    """
+    POST — Receives a CSV file upload from the user's device and saves it
+    to the global CSV directory for ML model training.
+    """
+    csv_file = request.FILES.get('csv_file')
+    if not csv_file:
+        return Response(
+            {"error": "No CSV file provided. Please select a file to upload."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Validate file extension
+    if not csv_file.name.lower().endswith('.csv'):
+        return Response(
+            {"error": "Invalid file type. Only .csv files are accepted."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Validate file size (max 50MB)
+    if csv_file.size > 50 * 1024 * 1024:
+        return Response(
+            {"error": "File too large. Maximum size is 50MB."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Save to CSV/ directory
+    csv_dir = Path(settings.BASE_DIR).parent / 'CSV'
+    csv_dir.mkdir(parents=True, exist_ok=True)
+    
+    user_id = request.user.id
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"data_harvest_upload_{user_id}_{timestamp}.csv"
+    filepath = csv_dir / filename
+    
+    with open(filepath, 'wb') as f:
+        for chunk in csv_file.chunks():
+            f.write(chunk)
+    
+    # Count records in the uploaded file
+    record_count = count_csv_records(str(filepath))
+    
+    return Response({
+        "message": "CSV file uploaded successfully.",
+        "filename": filename,
+        "records": record_count,
+        "size_bytes": csv_file.size
+    }, status=status.HTTP_201_CREATED)

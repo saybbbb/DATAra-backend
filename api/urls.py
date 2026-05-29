@@ -16,5 +16,6 @@ urlpatterns = [
     path('sync/upload-global/', sync_views.upload_to_global, name='sync-upload-global'),
     path('sync/download-local/', sync_views.download_local_data, name='sync-download-local'),
     path('sync/generate-mock/', sync_views.generate_mock_stats, name='sync-generate-mock'),
+    path('sync/upload-csv/', sync_views.upload_csv_file, name='sync-upload-csv'),
     path('sync/global-averages/', sync_views.global_averages, name='sync-global-averages'),
 ]
