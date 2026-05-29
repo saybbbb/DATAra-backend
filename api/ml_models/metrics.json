@@ -1,7 +1,7 @@
 {
-    "mae_mb": 275.27091707,
-    "rmse_mb": 342.1133353584527,
-    "r2_score": -32.17341277708042,
+    "mae_mb": 20.541231809050693,
+    "rmse_mb": 98.46984423338066,
+    "r2_score": 0.41943129631465437,
     "features_used": [
         "hour",
         "day_of_week",
@@ -9,5 +9,5 @@
         "screen_on",
         "battery_level"
     ],
-    "dataset_size_records": 18
+    "dataset_size_records": 1440
 }
