@@ -19,3 +19,11 @@ media/
 # OS
 .DS_Store
 Thumbs.db
+
+# Environment variables
+.env
+.env.local
+
+# Machine Learning models
+*.pkl
+*.joblib

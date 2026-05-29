@@ -1,3 +1,7 @@
+import os
+import json
+from pathlib import Path
+from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -133,3 +137,29 @@ def profile_view(request):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def ml_metrics_view(request):
+    """
+    GET — Fetch Machine Learning model performance/evaluation metrics
+    """
+    base_dir = Path(settings.BASE_DIR)
+    metrics_path = base_dir / 'api' / 'ml_models' / 'metrics.json'
+    
+    if not metrics_path.exists():
+        return Response(
+            {"error": "ML model metrics not found. Please ensure the model is trained."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+        
+    try:
+        with open(metrics_path, 'r') as mf:
+            metrics_data = json.load(mf)
+        return Response(metrics_data)
+    except Exception as e:
+        return Response(
+            {"error": f"Failed to load metrics: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
