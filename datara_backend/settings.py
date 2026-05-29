@@ -78,7 +78,6 @@ TEMPLATES = [
         },
     },
 ]
-WSGI_APPLICATION = 'datara_backend.wsgi.application'
 ASGI_APPLICATION = 'datara_backend.asgi.application'
 
 # Channel Layers (Redis for Docker production, In-Memory for Local fallback)

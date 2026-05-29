@@ -132,8 +132,10 @@ class DataUsagePredictor:
             ratio = hours_remaining / hours_to_expiry
             if ratio < 0.5:
                 usage_pace = "extreme"
-            else:
+            elif ratio < 0.75:
                 usage_pace = "warning"
+            else:
+                usage_pace = "moderate"
         else:
             usage_pace = "normal"
             
