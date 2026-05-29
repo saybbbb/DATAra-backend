@@ -26,7 +26,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-64v6n2om$urmjipxmd$9#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+#mao rani akong gihilabtan -ggll
 ALLOWED_HOSTS = ['*']
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 
@@ -52,6 +54,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -75,7 +78,6 @@ TEMPLATES = [
         },
     },
 ]
-
 WSGI_APPLICATION = 'datara_backend.wsgi.application'
 ASGI_APPLICATION = 'datara_backend.asgi.application'
 
